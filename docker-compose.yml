@@ -1,0 +1,43 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_USER: odoo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:18.0
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+      - DB_PORT=5432
+    volumes:
+      # Monta los addons de Odoo Community
+      - ./addons:/mnt/extra-addons
+      # Monta el código completo para desarrollo (opcional)
+      - ./odoo:/usr/lib/python3/dist-packages/odoo
+      # Datos persistentes de Odoo
+      - odoo-data:/var/lib/odoo
+    command: odoo --dev=all --database=odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo
+
+volumes:
+  pgdata:
+  odoo-data:
