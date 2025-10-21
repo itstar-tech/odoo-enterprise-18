@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_library_member" model="ir.actions.act_window">
+        <field name="name">Miembros</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_library_member', '=', True)]</field>
+        <field name="context">{'default_is_library_member': True}</field>
+    </record>
+
+    <record id="view_partner_form_inherit_library" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.library</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Biblioteca" invisible="is_library_member == False">
+                    <group>
+                        <field name="is_library_member"/>
+                        <field name="member_id_code"/>
+                    </group>
+                    <field name="loan_ids" readonly="1">
+                        <list>
+                            <field name="book_id"/>
+                            <field name="loan_date"/>
+                            <field name="due_date"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='vat']" position="after">
+                <field name="is_library_member"/>
+            </xpath>
+        </field>
+    </record>
+    
+</odoo>

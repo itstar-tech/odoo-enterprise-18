@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <menuitem 
+        id="library_menu_root"
+        name="Biblioteca"
+        web_icon="library_management,static/description/icon.png"
+        sequence="10"/>
+
+    <menuitem 
+        id="library_menu_catalog"
+        name="Catálogo"
+        parent="library_menu_root"
+        sequence="10"/>
+    
+    <menuitem 
+        id="library_menu_action_book"
+        name="Libros"
+        parent="library_menu_catalog"
+        action="action_library_book"
+        sequence="10"/>
+
+    <menuitem 
+        id="library_menu_operations"
+        name="Operaciones"
+        parent="library_menu_root"
+        sequence="20"/>
+
+    <menuitem 
+        id="library_menu_action_loan"
+        name="Préstamos"
+        parent="library_menu_operations"
+        action="action_library_loan"
+        sequence="10"/>
+
+    <menuitem 
+        id="library_menu_config"
+        name="Configuración"
+        parent="library_menu_root"
+        sequence="100"/>
+
+    <menuitem 
+        id="library_menu_action_member"
+        name="Miembros"
+        parent="library_menu_config"
+        action="action_library_member"
+        sequence="10"/>
+
+</odoo>

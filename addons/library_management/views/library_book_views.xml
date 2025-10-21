@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="action_library_book" model="ir.actions.act_window">
+        <field name="name">Libros</field>
+        <field name="res_model">library.book</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ¡Crea tu primer libro!
+            </p><p>
+                Gestiona el catálogo maestro de todos los libros en tu biblioteca.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_library_book_tree" model="ir.ui.view">
+        <field name="name">library.book.tree</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <list string="Libros">
+                <field name="name"/>
+                <field name="author_ids" widget="many2many_tags"/>
+                <field name="isbn"/>
+                <field name="availability" widget="badge" decoration-success="availability == 'available'" decoration-warning="availability == 'on_loan'" decoration-danger="availability == 'not_available'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_library_book_form" model="ir.ui.view">
+        <field name="name">library.book.form</field>
+        <field name="model">library.book</field>
+        <field name="arch" type="xml">
+            <form string="Libro">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Título del Libro"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="author_ids" widget="many2many_tags"/>
+                            <field name="isbn"/>
+                        </group>
+                        <group>
+                            <field name="availability" widget="badge" decoration-success="availability == 'available'" decoration-warning="availability == 'on_loan'" decoration-danger="availability == 'not_available'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Sinopsis">
+                            <field name="sinopsis" placeholder="Escribe un breve resumen del libro..."/>
+                        </page>
+                        <page string="Copias Físicas">
+                            <field name="copy_ids">
+                                <list editable="bottom">
+                                    <field name="reference_code"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+</odoo>

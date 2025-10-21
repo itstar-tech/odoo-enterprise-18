@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: odoo
       POSTGRES_USER: odoo
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -30,13 +30,18 @@ services:
       - PASSWORD=odoo
       - DB_PORT=5432
     volumes:
-      # Monta los addons de Odoo Community
+      # Monta TODOS los addons (community + enterprise + personalizados)
       - ./addons:/mnt/extra-addons
-      # Monta el código completo para desarrollo (opcional)
-      - ./odoo:/usr/lib/python3/dist-packages/odoo
+      # Monta el código fuente de Odoo para desarrollo
+      - ./odoo:/mnt/odoo-src
       # Datos persistentes de Odoo
       - odoo-data:/var/lib/odoo
-    command: odoo --dev=all --database=odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo
+      # Archivo de configuración personalizado
+      - ./config:/etc/odoo
+    command: >
+      odoo 
+      --config=/etc/odoo/odoo.conf
+      --dev=reload,qweb,werkzeug,xml
 
 volumes:
   pgdata:
