@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista formulario extendida para res.users -->
+    <record id="view_users_form_api" model="ir.ui.view">
+        <field name="name">res.users.form.api</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='preferences']" position="after">
+                <page string="API Access" groups="base.group_system">
+                    <group>
+                        <group>
+                            <field name="api_key" password="True" readonly="1"/>
+                        </group>
+                        <group>
+                            <button name="action_regenerate_api_key" 
+                                    string="Generar/Regenerar API Key" 
+                                    type="object" 
+                                    class="btn-primary"
+                                    help="Genera una nueva clave de API. La clave anterior dejará de funcionar."/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Nota:</strong> Esta clave permite acceso a la API REST de la biblioteca. 
+                        Mantenla segura y no la compartas. Si crees que ha sido comprometida, regenera una nueva.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

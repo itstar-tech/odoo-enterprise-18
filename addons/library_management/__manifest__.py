@@ -6,10 +6,11 @@
     'description': """
         Módulo completo para administrar una biblioteca.
     """,
-    'author': "Tu Nombre",
-    'website': "httpsia.com",
+    'author': "Darvin Luna",
+    'website': "https://darvinluna.com",
     'category': 'Services/Library',
     'version': '1.0',
+    'license': 'LGPL-3',
     
     # 'depends' es crucial. Necesitamos 'base' siempre, 
     # y 'mail' para las notificaciones y seguidores (ej. "libro devuelto").
@@ -24,6 +25,7 @@
         'views/library_book_views.xml',
         'views/library_loan_views.xml',
         'views/res_partner_views.xml',
+        'views/res_users_views.xml',
         
         # 3. Menús (SIEMPRE DESPUÉS DE LAS VISTAS/ACCIONES que usan)
         'views/library_menus.xml',
