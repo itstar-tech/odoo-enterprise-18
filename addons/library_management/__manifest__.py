@@ -6,26 +6,24 @@
     'description': """
         Módulo completo para administrar una biblioteca.
     """,
-    'author': "Tu Nombre",
-    'website': "httpsia.com",
+    'author': "Darvin Luna",
+    'website': "https://github.com/DarvinLuna",
     'category': 'Services/Library',
     'version': '1.0',
+    'license': 'LGPL-3',
     
-    # 'depends' es crucial. Necesitamos 'base' siempre, 
-    # y 'mail' para las notificaciones y seguidores (ej. "libro devuelto").
-    'depends': ['base', 'mail'],
 
-    # 'data' es la lista de archivos XML que cargará (Vistas y Seguridad)
+    'depends': ['base', 'mail', 'web'],
+
     'data': [
         # 1. Seguridad (SIEMPRE PRIMERO)
         'security/ir.model.access.csv',
-        
-        # 2. Vistas (El orden aquí no es crítico, pero es bueno tener menús al final)
+
         'views/library_book_views.xml',
         'views/library_loan_views.xml',
         'views/res_partner_views.xml',
-        
-        # 3. Menús (SIEMPRE DESPUÉS DE LAS VISTAS/ACCIONES que usan)
+        'views/show_api_key_views.xml',
+
         'views/library_menus.xml',
     ],
     'application': True, # Esto lo hace una "App" completa en Odoo.

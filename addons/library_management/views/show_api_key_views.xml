@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Legacy wizard view (kept for reference, no longer used) -->
+    <record id="view_show_api_key_wizard_form" model="ir.ui.view">
+        <field name="name">library.show.api.key.form</field>
+        <field name="model">library.show.api.key</field>
+        <field name="arch" type="xml">
+            <form string="Nueva Clave API">
+                <sheet>
+                    <h3 class="fw-bold">Copia tu nueva clave</h3>
+                    <p>
+                        Usa esta clave para integraciones externas. Guárdala en un lugar seguro.
+                    </p>
+                    <group>
+                        <field name="key" readonly="1" widget="copy_clipboard"/>
+                    </group>
+                    <footer>
+                        <button string="Cerrar" class="btn-primary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Improve built-in API key show form with copy-to-clipboard -->
+    <record id="view_res_users_apikeys_show_inherit_copy" model="ir.ui.view">
+        <field name="name">res.users.apikeys.show.inherit.copy</field>
+        <field name="model">res.users.apikeys.show</field>
+        <field name="inherit_id" ref="base.form_res_users_key_show"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='key']" position="attributes">
+                <attribute name="widget">copy_clipboard</attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
