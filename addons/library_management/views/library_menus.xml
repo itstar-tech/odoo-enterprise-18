@@ -46,4 +46,11 @@
         action="action_library_member"
         sequence="10"/>
 
+    <menuitem
+            id="library_menu_action_api_key"
+            name="API Keys"
+            parent="library_menu_config"
+            action="action_api_key"
+            sequence="20"/>
+
 </odoo>

@@ -10,8 +10,9 @@ Sistema completo de gestión de biblioteca que permite administrar libros, prés
 - ✅ Gestión de miembros de la biblioteca
 - ✅ Historial de préstamos
 - ✅ Notificaciones y seguimiento (integración con mail)
-- ✅ API Key para autenticación de usuarios
-- ✅ API REST (JSON-RPC nativa de Odoo)
+- ✅ **API REST con autenticación por sesión (Session ID)**
+- ✅ **API REST con autenticación Bearer Token**
+- ✅ API JSON-RPC nativa de Odoo
 
 ## Instalación
 
@@ -34,6 +35,201 @@ Una vez instalado, encontrarás un nuevo menú "Biblioteca" con las siguientes o
 ### Configuración
 
 - **Miembros**: Administra los miembros de la biblioteca
+
+---
+
+## 🔐 API REST con Autenticación por Sesión (Para Apps)
+
+**Ideal para aplicaciones web y móviles** donde los usuarios inician sesión con usuario y contraseña.
+
+### Flujo de Autenticación
+
+```
+1. POST /api/auth/login        → Obtener session_id
+2. Usar session_id en todas las peticiones posteriores
+3. POST /api/auth/logout       → Cerrar sesión
+```
+
+### Ejemplo Rápido
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {
+      "login": "admin",
+      "password": "admin"
+    },
+    "id": 1
+  }' \
+  http://localhost:8069/api/auth/login
+```
+
+**Respuesta:**
+
+```json
+{
+  "result": {
+    "success": true,
+    "data": {
+      "session_id": "a1b2c3d4...",
+      "uid": 2,
+      "username": "Administrator"
+    }
+  }
+}
+```
+
+Luego usa el `session_id` en cookie para las siguientes peticiones:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Cookie: session_id=a1b2c3d4..." \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {
+      "name": "Mi Libro",
+      "copies": [{"reference_code": "BOOK-001"}]
+    },
+    "id": 2
+  }' \
+  http://localhost:8069/api/library/books
+```
+
+### 📖 Documentación Completa
+
+**[SESSION_API_GUIDE.md](./SESSION_API_GUIDE.md)** - Guía completa de autenticación por sesión con ejemplos en Python,
+JavaScript y cURL
+
+**Scripts de prueba:**
+
+```bash
+cd addons/library_management/examples
+python3 test_session_api.py
+```
+
+---
+
+## 🔑 API REST con Bearer Token (Para Integraciones)
+
+**Ideal para integraciones backend** y servicios que necesitan acceso permanente.
+
+### Generación de API Key
+
+1. Inicia sesión en Odoo
+2. Ve a tu perfil de usuario (esquina superior derecha)
+3. Selecciona **Preferencias**
+4. En la pestaña **Cuenta**, busca la sección **API Keys**
+5. Haz clic en **Nueva API Key**
+6. Ingresa una descripción (ej: "Integración Sistema Externo")
+7. Copia la clave generada
+
+### Endpoints Disponibles
+
+#### 1. Crear Libro con Copias
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_API_KEY_AQUI" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {
+      "name": "Cien Años de Soledad",
+      "isbn": "9780307474728",
+      "sinopsis": "La historia de la familia Buendía en Macondo",
+      "author_ids": [7],
+      "copies": [
+        {"reference_code": "LIB-001-2025"},
+        {"reference_code": "LIB-002-2025"}
+      ]
+    },
+    "id": 1
+  }' \
+  http://localhost:8069/api/library/books
+```
+
+#### 2. Buscar Libros
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_API_KEY_AQUI" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {
+      "search": "Quijote",
+      "limit": 10
+    },
+    "id": 2
+  }' \
+  http://localhost:8069/api/library/books
+```
+
+#### 3. Obtener Detalles de un Libro
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_API_KEY_AQUI" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {},
+    "id": 3
+  }' \
+  http://localhost:8069/api/library/books/15
+```
+
+### Ejemplo con Python
+
+```python
+import requests
+import json
+
+API_KEY = "tu_api_key_aqui"
+ODOO_URL = "http://localhost:8069"
+
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+
+payload = {
+    "jsonrpc": "2.0",
+    "method": "call",
+    "params": {
+        "name": "El Principito",
+        "isbn": "9788478887194",
+        "copies": [
+            {"reference_code": "PRIN-001"},
+            {"reference_code": "PRIN-002"}
+        ]
+    },
+    "id": 1
+}
+
+response = requests.post(
+    f"{ODOO_URL}/api/library/books",
+    headers=headers,
+    data=json.dumps(payload)
+)
+
+result = response.json()
+print(json.dumps(result, indent=2))
+```
+
+### Documentación Completa de la API
+
+Para ejemplos detallados, manejo de errores, y más información, consulta:
+
+**[API_USAGE.md](./API_USAGE.md)** - Guía completa de uso de la API REST
 
 ## API REST - JSON-RPC (Nativa de Odoo)
 
@@ -296,3 +492,4 @@ Para problemas o preguntas, consulta la documentación oficial de Odoo:
 ## Licencia
 
 LGPL-3
+

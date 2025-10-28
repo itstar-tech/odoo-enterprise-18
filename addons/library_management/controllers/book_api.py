@@ -1,130 +1,235 @@
 # -*- coding: utf-8 -*-
-import json
 from odoo import http
 from odoo.http import request, Response
 
 
-def _authenticate_api_key():
-    """Authenticate the request using an API key.
-    Accepts the key from:
-    - HTTP header: X-API-Key
-    - Query param: api_key
-    - JSON body: {"api_key": "..."}
-
-    Returns: (user_record | None, error_response | None)
+class LibraryBookAPI(http.Controller):
     """
-    api_key = request.httprequest.headers.get('X-API-Key')
-    if not api_key:
-        api_key = request.params.get('api_key')
-    if not api_key:
+    API JSON-RPC para gestionar libros de biblioteca.
+    Usa autenticación estándar de Odoo (usuario/contraseña/base de datos).
+    """
+
+    @http.route('/api/library/authenticate', type='json', auth='none', methods=['POST'], csrf=False)
+    def authenticate(self, db, login, password):
+        """
+        Autentica un usuario y devuelve su UID.
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "db": "library_management",
+                "login": "admin",
+                "password": "admin"
+            },
+            "id": 1
+        }
+        
+        Retorna: {"uid": <user_id>}
+        """
         try:
-            body = request.httprequest.json
-            if isinstance(body, dict):
-                api_key = body.get('api_key')
-        except Exception:
-            api_key = None
+            uid = request.session.authenticate(db, login, password)
+            if not uid:
+                return {'error': 'Credenciales inválidas'}
+            return {'uid': uid}
+        except Exception as e:
+            return {'error': str(e)}
 
-    if not api_key:
-        return None, Response(
-            json.dumps({'error': 'Unauthorized: missing API key'}),
-            content_type='application/json',
-            status=401,
-        )
-
-    user = request.env['res.users'].sudo().search([('api_key', '=', api_key), ('active', '=', True)], limit=1)
-    if not user:
-        return None, Response(
-            json.dumps({'error': 'Unauthorized: invalid API key'}),
-            content_type='application/json',
-            status=401,
-        )
-    return user, None
-
-
-class BookAPIController(http.Controller):
-    """
-    Controlador de API REST para el modelo library.book
-    Protegido por API Key simple (res.users.api_key).
-    """
-
-    @http.route('/api/ping', type='http', auth='public', methods=['GET'], website=False, csrf=False)
-    def ping(self, **kwargs):
-        """
-        Health check endpoint to confirm controllers are loaded
-        """
-        return Response('ok', content_type='text/plain', status=200)
-
-    @http.route('/api/library/books', type='http', auth='public', methods=['GET'], website=False, csrf=False)
-    def search_books(self, search=None, **kwargs):
+    @http.route('/api/library/books/search', type='json', auth='user', methods=['POST'], csrf=False)
+    def search_books(self, search=None, limit=100):
         """
         Busca libros en la biblioteca.
-        Requiere API key en header X-API-Key o en ?api_key=.
-        Ejemplo: /api/library/books?search=Quijote
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "search": "Quijote",
+                "limit": 10
+            },
+            "id": 1
+        }
+        
+        Retorna: [{"id": 1, "name": "...", "isbn": "...", ...}]
         """
-        user, error = _authenticate_api_key()
-        if error:
-            return error
-
         try:
             domain = []
             if search:
                 domain.append(('name', 'ilike', search))
-            books = request.env['library.book'].sudo().search(domain)
-            book_data = books.read(['id', 'name', 'isbn', 'availability'])
-            return Response(
-                json.dumps(book_data),
-                content_type='application/json',
-                status=200
-            )
-        except Exception as e:
-            return Response(
-                json.dumps({'error': str(e)}),
-                content_type='application/json',
-                status=500
-            )
 
-    @http.route('/api/library/books', type='http', auth='public', methods=['POST'], website=False, csrf=False)
-    def create_book(self, **kwargs):
+            books = request.env['library.book'].search(domain, limit=limit)
+            book_data = books.read(['id', 'name', 'isbn', 'availability'])
+
+            return {'books': book_data, 'count': len(book_data)}
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route('/api/library/books/create', type='json', auth='user', methods=['POST'], csrf=False)
+    def create_book(self, name, isbn=None, **kwargs):
         """
         Crea un nuevo libro.
-        Requiere API key. Cuerpo JSON con los datos del libro.
-        Ejemplo: {"name": "El Principito", "isbn": "1234567890"}
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "name": "El Principito",
+                "isbn": "978-0156012195"
+            },
+            "id": 1
+        }
+        
+        Retorna: {"id": <book_id>, "name": "..."}
         """
-        user, error = _authenticate_api_key()
-        if error:
-            return error
-
         try:
-            data = request.httprequest.json or {}
+            if not name or not name.strip():
+                return {'error': "El campo 'name' es obligatorio."}
 
-            # Validación simple
-            name = (data.get('name') or '').strip()
-            if not name:
-                raise ValueError("El campo 'name' es obligatorio.")
-
-            new_book = request.env['library.book'].sudo().create({
-                'name': name,
-                'isbn': data.get('isbn'),
+            new_book = request.env['library.book'].create({
+                'name': name.strip(),
+                'isbn': isbn,
             })
 
-            response_data = {
+            return {
                 'id': new_book.id,
-                'name': new_book.name
+                'name': new_book.name,
+                'isbn': new_book.isbn,
+                'availability': new_book.availability
             }
-            return Response(
-                json.dumps(response_data),
-                content_type='application/json',
-                status=201
-            )
-        except ValueError as ve:
-            return Response(
-                json.dumps({'error': str(ve)}),
-                content_type='application/json',
-                status=400
-            )
         except Exception as e:
-            return Response(
-                json.dumps({'error': str(e)}),
-                content_type='application/json',
-                status=500
-            )
+            return {'error': str(e)}
+
+    @http.route('/api/library/books/read', type='json', auth='user', methods=['POST'], csrf=False)
+    def read_book(self, book_id, fields=None):
+        """
+        Lee los datos de un libro específico.
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "book_id": 1,
+                "fields": ["id", "name", "isbn", "availability"]
+            },
+            "id": 1
+        }
+        
+        Retorna: {"id": 1, "name": "...", ...}
+        """
+        try:
+            if not book_id:
+                return {'error': 'Se requiere book_id'}
+
+            book = request.env['library.book'].browse(book_id)
+            if not book.exists():
+                return {'error': f'Libro con ID {book_id} no encontrado'}
+
+            if not fields:
+                fields = ['id', 'name', 'isbn', 'availability']
+
+            book_data = book.read(fields)[0]
+            return book_data
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route('/api/library/books/update', type='json', auth='user', methods=['POST'], csrf=False)
+    def update_book(self, book_id, values):
+        """
+        Actualiza un libro existente.
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "book_id": 1,
+                "values": {
+                    "name": "Nuevo nombre",
+                    "isbn": "9876543210"
+                }
+            },
+            "id": 1
+        }
+        
+        Retorna: {"success": true, "id": <book_id>}
+        """
+        try:
+            if not book_id:
+                return {'error': 'Se requiere book_id'}
+
+            if not values or not isinstance(values, dict):
+                return {'error': 'Se requiere un diccionario de valores'}
+
+            book = request.env['library.book'].browse(book_id)
+            if not book.exists():
+                return {'error': f'Libro con ID {book_id} no encontrado'}
+
+            book.write(values)
+
+            return {
+                'success': True,
+                'id': book.id,
+                'updated_fields': list(values.keys())
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route('/api/library/books/delete', type='json', auth='user', methods=['POST'], csrf=False)
+    def delete_book(self, book_id):
+        """
+        Elimina un libro.
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "book_id": 1
+            },
+            "id": 1
+        }
+        
+        Retorna: {"success": true, "deleted_id": <book_id>}
+        """
+        try:
+            if not book_id:
+                return {'error': 'Se requiere book_id'}
+
+            book = request.env['library.book'].browse(book_id)
+            if not book.exists():
+                return {'error': f'Libro con ID {book_id} no encontrado'}
+
+            deleted_id = book.id
+            book.unlink()
+
+            return {
+                'success': True,
+                'deleted_id': deleted_id
+            }
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route('/api/library/ping', type='json', auth='none', methods=['POST'], csrf=False)
+    def ping(self):
+        """
+        Health check endpoint para confirmar que la API está funcionando.
+        
+        Uso:
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {},
+            "id": 1
+        }
+        
+        Retorna: {"status": "ok", "message": "API funcionando correctamente"}
+        """
+        return {
+            'status': 'ok',
+            'message': 'API funcionando correctamente',
+            'version': '1.0'
+        }

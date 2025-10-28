@@ -22,8 +22,6 @@
         'views/library_book_views.xml',
         'views/library_loan_views.xml',
         'views/res_partner_views.xml',
-        'views/show_api_key_views.xml',
-
         'views/library_menus.xml',
     ],
     'application': True, # Esto lo hace una "App" completa en Odoo.

@@ -3,8 +3,29 @@
 ## 🚀 Estado del Servicio
 
 **URL Base**: `http://localhost:8069`  
-**Base de Datos**: `odoo`  
+**Base de Datos**: `library_management`  
 **Puerto**: `8069`
+
+## 🎯 Pruebas con Postman
+
+**¿Prefieres probar la API con Postman?** Tenemos una guía completa para ti:
+
+- 📖 **[Guía de Postman](POSTMAN_GUIDE.md)** - Documentación paso a paso
+- 📦 **[Colección de Postman](postman_collection.json)** - Archivo listo para importar
+
+### Importar Colección de Postman
+
+1. Abre Postman
+2. Click en **"Import"**
+3. Selecciona el archivo `postman_collection.json`
+4. ¡Listo! Todas las peticiones están configuradas
+
+La colección incluye:
+
+- ✅ 14+ peticiones pre-configuradas
+- ✅ Tests automáticos
+- ✅ Variables de entorno
+- ✅ Ejemplos de todas las operaciones CRUD
 
 ## 🔑 Autenticación
 
@@ -16,7 +37,7 @@ operaciones subsecuentes.
 ```
 Usuario: admin
 Contraseña: admin
-Base de Datos: odoo
+Base de Datos: library_management
 ```
 
 ## 📡 Endpoints Disponibles
@@ -59,7 +80,7 @@ import xmlrpc.client
 
 # Configuración
 URL = 'http://localhost:8069'
-DB = 'odoo'
+DB = 'library_management'
 USERNAME = 'admin'
 PASSWORD = 'admin'
 
@@ -250,7 +271,7 @@ curl -X POST http://localhost:8069/jsonrpc \
     "params": {
       "service": "common",
       "method": "authenticate",
-      "args": ["odoo", "admin", "admin", {}]
+      "args": ["library_management", "admin", "admin", {}]
     },
     "id": 1
   }' | jq
@@ -269,7 +290,7 @@ curl -X POST http://localhost:8069/jsonrpc \
       "service": "object",
       "method": "execute_kw",
       "args": [
-        "odoo",
+        "library_management",
         2,
         "admin",
         "library.book",
@@ -294,7 +315,7 @@ curl -X POST http://localhost:8069/jsonrpc \
       "service": "object",
       "method": "execute_kw",
       "args": [
-        "odoo",
+        "library_management",
         2,
         "admin",
         "library.book",
@@ -318,7 +339,7 @@ curl -X POST http://localhost:8069/jsonrpc \
       "service": "object",
       "method": "execute_kw",
       "args": [
-        "odoo",
+        "library_management",
         2,
         "admin",
         "library.book",
@@ -345,7 +366,7 @@ npm install axios
 const axios = require('axios');
 
 const ODOO_URL = 'http://localhost:8069';
-const DB = 'odoo';
+const DB = 'library_management';
 const USERNAME = 'admin';
 const PASSWORD = 'admin';
 
@@ -525,7 +546,7 @@ Debe retornar HTML de la página de selección de base de datos.
 python3 -c "
 import xmlrpc.client
 common = xmlrpc.client.ServerProxy('http://localhost:8069/xmlrpc/2/common')
-uid = common.authenticate('odoo', 'admin', 'admin', {})
+uid = common.authenticate('library_management', 'admin', 'admin', {})
 print(f'UID: {uid}')
 "
 ```
@@ -536,9 +557,9 @@ print(f'UID: {uid}')
 python3 -c "
 import xmlrpc.client
 common = xmlrpc.client.ServerProxy('http://localhost:8069/xmlrpc/2/common')
-uid = common.authenticate('odoo', 'admin', 'admin', {})
+uid = common.authenticate('library_management', 'admin', 'admin', {})
 models = xmlrpc.client.ServerProxy('http://localhost:8069/xmlrpc/2/object')
-count = models.execute_kw('odoo', uid, 'admin', 'library.book', 'search_count', [[]])
+count = models.execute_kw('library_management', uid, 'admin', 'library.book', 'search_count', [[]])
 print(f'Total de libros: {count}')
 "
 ```
@@ -567,7 +588,7 @@ docker compose restart odoo
 - Actualizar el módulo si es necesario:
 
 ```bash
-docker compose exec -T odoo odoo -d odoo -u library_management --stop-after-init
+docker compose exec -T odoo odoo -d library_management -u library_management --stop-after-init
 docker compose restart odoo
 ```
 

@@ -6,3 +6,6 @@ access_library_book_copy_manager,access.library.book.copy.manager,model_library_
 access_library_loan,access.library.loan,model_library_loan,base.group_user,1,0,0,0
 access_library_loan_manager,access.library.loan.manager,model_library_loan,base.group_system,1,1,1,1
 access_res_partner_member,access.res.partner.member,base.model_res_partner,base.group_user,1,1,0,0
+access_library_api_key,access.library.api.key,model_library_api_key,base.group_user,1,0,0,0
+access_library_api_key_manager,access.library.api.key.manager,model_library_api_key,base.group_system,1,1,1,1
+access_library_api_key_show,access.library.api.key.show,model_library_api_key_show,base.group_user,1,1,1,1
