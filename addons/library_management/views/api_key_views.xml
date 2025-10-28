@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_api_key_tree" model="ir.ui.view">
+        <field name="name">library.api.key.tree</field>
+        <field name="model">library.api.key</field>
+        <field name="arch" type="xml">
+            <list string="API Keys" decoration-danger="not active"
+                  decoration-warning="expires_at and expires_at &lt; context_today()">
+                <field name="name"/>
+                <field name="key_prefix"/>
+                <field name="user_id"/>
+                <field name="scope" widget="badge" decoration-success="scope == 'read'"
+                       decoration-warning="scope == 'write'" decoration-info="scope == 'full'"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="expires_at"/>
+                <field name="last_used_at"/>
+                <field name="usage_count"/>
+                <field name="rate_limit"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_api_key_form" model="ir.ui.view">
+        <field name="name">library.api.key.form</field>
+        <field name="model">library.api.key</field>
+        <field name="arch" type="xml">
+            <form string="API Key">
+                <header>
+                    <button name="action_rotate_key" string="Rotar Clave" type="object" class="oe_highlight"
+                            invisible="not id"/>
+                    <button name="action_revoke" string="Revocar" type="object" class="btn-danger"
+                            invisible="not active or not id"
+                            confirm="¿Estás seguro de revocar esta API Key? No podrá usarse más."/>
+                    <field name="active" widget="statusbar" statusbar_visible="active"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_rotate_key" type="object" class="oe_stat_button" icon="fa-refresh"
+                                invisible="not id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Rotar</span>
+                                <span class="o_stat_text">Clave</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Inactiva" bg_color="bg-danger" invisible="active"/>
+                    <widget name="web_ribbon" title="Expirada" bg_color="bg-warning"
+                            invisible="not expires_at or expires_at &gt;= context_today()"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Descripción de la API Key"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="key_prefix" readonly="1" string="Prefijo de Identificación"/>
+                            <field name="user_id" required="1"/>
+                            <field name="scope" required="1" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="expires_at"/>
+                            <field name="last_used_at" readonly="1"/>
+                            <field name="usage_count" readonly="1"/>
+                            <field name="max_usage" help="0 = Ilimitado"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Seguridad">
+                            <group>
+                                <group>
+                                    <field name="rate_limit" help="Peticiones por hora permitidas. 0 = Sin límite"/>
+                                    <field name="request_count_hour" readonly="1"/>
+                                    <field name="last_rate_reset" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="allowed_ips" widget="text"
+                                           placeholder="Lista de IPs permitidas&#10;Una por línea&#10;Vacío = Todas las IPs"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Información Técnica">
+                            <group>
+                                <field name="id" readonly="1"/>
+                                <field name="create_date" readonly="1"/>
+                                <field name="create_uid" readonly="1"/>
+                                <field name="write_date" readonly="1"/>
+                                <field name="write_uid" readonly="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_api_key_search" model="ir.ui.view">
+        <field name="name">library.api.key.search</field>
+        <field name="model">library.api.key</field>
+        <field name="arch" type="xml">
+            <search string="Buscar API Keys">
+                <field name="name"/>
+                <field name="key_prefix"/>
+                <field name="user_id"/>
+                <filter string="Activas" name="filter_active" domain="[('active', '=', True)]"/>
+                <filter string="Inactivas" name="filter_inactive" domain="[('active', '=', False)]"/>
+                <filter string="Expiradas" name="filter_expired"
+                        domain="[('expires_at', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Sin Expiración" name="filter_no_expiry" domain="[('expires_at', '=', False)]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Usuario" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Scope" name="group_scope" context="{'group_by': 'scope'}"/>
+                    <filter string="Estado" name="group_active" context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_api_key" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">library.api.key</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea tu primera API Key
+            </p>
+            <p>
+                Las API Keys permiten autenticar peticiones HTTP sin necesidad de iniciar sesión.
+                Son ideales para integraciones con sistemas externos.
+            </p>
+        </field>
+    </record>
+
+    <record id="view_api_key_show_form" model="ir.ui.view">
+        <field name="name">library.api.key.show.form</field>
+        <field name="model">library.api.key.show</field>
+        <field name="arch" type="xml">
+            <form string="API Key Generada">
+                <sheet>
+                    <div class="alert alert-warning" role="alert">
+                        <strong>⚠️ ¡IMPORTANTE!</strong>
+                        <p>Esta es la única vez que verás esta API Key. Cópiala ahora y guárdala en un lugar seguro.</p>
+                    </div>
+
+                    <group>
+                        <field name="message" readonly="1" nolabel="1"/>
+                    </group>
+
+                    <group>
+                        <field name="key" readonly="1" widget="CopyClipboardChar" password="True"/>
+                    </group>
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>📖 Cómo usar tu API Key:</strong>
+                        <p>Incluye el siguiente header en tus peticiones HTTP:</p>
+                        <code>X-API-Key: [tu_clave_aqui]</code>
+                        <p class="mt-2">Ejemplo con cURL:</p>
+                        <code>curl -H "X-API-Key: [tu_clave]" http://localhost:8069/api/library/books</code>
+                    </div>
+
+                    <footer>
+                        <button string="Cerrar" class="btn-primary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>

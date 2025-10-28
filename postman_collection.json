@@ -1,0 +1,638 @@
+{
+  "info": {
+    "name": "Library Management API - Odoo",
+    "description": "Colección completa para probar la API de gestión de biblioteca Odoo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "library-management-api-001",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Obtener UID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Autenticación exitosa\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.a('number');",
+                  "    pm.expect(jsonData.result).to.be.above(0);",
+                  "    ",
+                  "    pm.environment.set(\"uid\", jsonData.result);",
+                  "    console.log(\"✅ UID guardado: \" + jsonData.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"common\",\n        \"method\": \"authenticate\",\n        \"args\": [\n            \"{{database}}\",\n            \"{{username}}\",\n            \"{{password}}\",\n            {}\n        ]\n    },\n    \"id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Autentica al usuario y obtiene el UID necesario para todas las demás operaciones"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Libros - CRUD",
+      "item": [
+        {
+          "name": "Listar Todos los Libros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Se obtienen libros\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.an('array');",
+                  "    console.log(\"📚 Total de libros: \" + jsonData.result.length);",
+                  "    ",
+                  "    if (jsonData.result.length > 0) {",
+                  "        jsonData.result.forEach(book => {",
+                  "            console.log(`  - ${book.name} (ID: ${book.id})`);",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"search_read\",\n            [[]],\n            {\n                \"fields\": [\"id\", \"name\", \"isbn\", \"availability\", \"author_ids\"],\n                \"limit\": 20\n            }\n        ]\n    },\n    \"id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Lista todos los libros disponibles en el sistema"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Libros por Nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Búsqueda exitosa\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.an('array');",
+                  "    ",
+                  "    if (jsonData.result.length > 0) {",
+                  "        console.log(\"🔍 Libros encontrados:\");",
+                  "        jsonData.result.forEach(book => {",
+                  "            console.log(`  - ${book.name} (ID: ${book.id})`);",
+                  "        });",
+                  "    } else {",
+                  "        console.log(\"❌ No se encontraron libros con ese criterio\");",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"search_read\",\n            [[[\"name\", \"ilike\", \"Quijote\"]]],\n            {\n                \"fields\": [\"id\", \"name\", \"isbn\", \"availability\"]\n            }\n        ]\n    },\n    \"id\": 3\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Busca libros que contengan 'Quijote' en su nombre. Cambia el valor para buscar otros libros."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Libro creado exitosamente\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.a('number');",
+                  "    pm.expect(jsonData.result).to.be.above(0);",
+                  "    ",
+                  "    pm.environment.set(\"last_book_id\", jsonData.result);",
+                  "    console.log(\"✅ Libro creado con ID: \" + jsonData.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"create\",\n            [{\n                \"name\": \"El Principito\",\n                \"isbn\": \"9788478887194\"\n            }]\n        ]\n    },\n    \"id\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Crea un nuevo libro en el sistema. El ID generado se guarda automáticamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar Libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Libro actualizado exitosamente\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.true;",
+                  "    console.log(\"✅ Libro ID \" + pm.environment.get(\"last_book_id\") + \" actualizado\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"write\",\n            [\n                [{{last_book_id}}],\n                {\n                    \"isbn\": \"9788478887195\",\n                    \"sinopsis\": \"Una hermosa historia sobre un príncipe de otro planeta\"\n                }\n            ]\n        ]\n    },\n    \"id\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Actualiza el último libro creado. Cambia {{last_book_id}} por un ID específico si lo necesitas."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar Libro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Libro eliminado exitosamente\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.true;",
+                  "    console.log(\"🗑️  Libro ID \" + pm.environment.get(\"last_book_id\") + \" eliminado\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"unlink\",\n            [[{{last_book_id}}]]\n        ]\n    },\n    \"id\": 6\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "⚠️ CUIDADO: Elimina permanentemente el libro del sistema"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Copias de Libros",
+      "item": [
+        {
+          "name": "Listar Todas las Copias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Copias obtenidas\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.an('array');",
+                  "    ",
+                  "    console.log(\"📦 Total de copias: \" + jsonData.result.length);",
+                  "    jsonData.result.forEach(copy => {",
+                  "        console.log(`  - ${copy.reference_code} (${copy.state})`);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book.copy\",\n            \"search_read\",\n            [[]],\n            {\n                \"fields\": [\"id\", \"reference_code\", \"state\", \"book_id\"],\n                \"limit\": 20\n            }\n        ]\n    },\n    \"id\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Lista todas las copias físicas de los libros"
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Nueva Copia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Copia creada exitosamente\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.a('number');",
+                  "    pm.environment.set(\"last_copy_id\", jsonData.result);",
+                  "    console.log(\"✅ Copia creada con ID: \" + jsonData.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book.copy\",\n            \"create\",\n            [{\n                \"book_id\": 1,\n                \"reference_code\": \"COPY-TEST-001\"\n            }]\n        ]\n    },\n    \"id\": 8\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Crea una nueva copia física de un libro. Cambia book_id según necesites."
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Copias Disponibles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book.copy\",\n            \"search_read\",\n            [[[\"state\", \"=\", \"available\"]]],\n            {\n                \"fields\": [\"id\", \"reference_code\", \"book_id\", \"state\"]\n            }\n        ]\n    },\n    \"id\": 9\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Busca solo las copias que están disponibles para préstamo"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Préstamos",
+      "item": [
+        {
+          "name": "Listar Todos los Préstamos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Préstamos obtenidos\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.an('array');",
+                  "    ",
+                  "    console.log(\"📋 Total de préstamos: \" + jsonData.result.length);",
+                  "    jsonData.result.forEach(loan => {",
+                  "        console.log(`  - Préstamo ID: ${loan.id}, Estado: ${loan.state}`);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.loan\",\n            \"search_read\",\n            [[]],\n            {\n                \"fields\": [\"id\", \"member_id\", \"book_id\", \"copy_id\", \"state\", \"loan_date\", \"due_date\", \"return_date\"],\n                \"limit\": 20\n            }\n        ]\n    },\n    \"id\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Lista todos los préstamos del sistema"
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Préstamos Activos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.loan\",\n            \"search_read\",\n            [[[\"state\", \"=\", \"active\"]]],\n            {\n                \"fields\": [\"id\", \"member_id\", \"book_id\", \"loan_date\", \"due_date\"]\n            }\n        ]\n    },\n    \"id\": 11\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Busca solo los préstamos que están actualmente activos"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Estadísticas",
+      "item": [
+        {
+          "name": "Contar Total de Libros",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Conteo exitoso\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.result).to.be.a('number');",
+                  "    console.log(\"📊 Total de libros: \" + jsonData.result);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book\",\n            \"search_count\",\n            [[]]\n        ]\n    },\n    \"id\": 12\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Cuenta el número total de libros en el sistema"
+          },
+          "response": []
+        },
+        {
+          "name": "Contar Total de Copias",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.book.copy\",\n            \"search_count\",\n            [[]]\n        ]\n    },\n    \"id\": 13\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Cuenta el número total de copias físicas"
+          },
+          "response": []
+        },
+        {
+          "name": "Contar Préstamos Activos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"call\",\n    \"params\": {\n        \"service\": \"object\",\n        \"method\": \"execute_kw\",\n        \"args\": [\n            \"{{database}}\",\n            {{uid}},\n            \"{{password}}\",\n            \"library.loan\",\n            \"search_count\",\n            [[[\"state\", \"=\", \"active\"]]]\n        ]\n    },\n    \"id\": 14\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jsonrpc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "jsonrpc"
+              ]
+            },
+            "description": "Cuenta el número de préstamos activos"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8069",
+      "type": "string"
+    },
+    {
+      "key": "database",
+      "value": "library_management",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "uid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "last_book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "last_copy_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
